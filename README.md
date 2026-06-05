@@ -1,129 +1,197 @@
 # Reproducible Machine Learning Pipeline using Dagster
 
-This repository contains a reproducible machine learning pipeline built using **Dagster**.  
-The project demonstrates how asset-based orchestration helps avoid common issues with rerunning Jupyter notebooks by enabling dependency tracking and partial re-execution.
+## Overview
 
----
+This project demonstrates how modern MLOps workflows can be built using Dagster's asset-based orchestration framework.
 
-## Project Overview
+Traditional machine learning development often relies on monolithic Jupyter notebooks, where even minor modifications require rerunning large portions of the workflow. This project addresses that limitation by decomposing the ML workflow into reusable Dagster assets with explicit dependencies, enabling reproducibility, observability, and selective re-execution.
 
-Traditional Jupyter notebook workflows often require rerunning the entire notebook when small changes are made, leading to wasted computation and reproducibility issues.  
-This project solves that problem by modeling each step of the ML workflow as a **Dagster asset**.
-
----
-
-## Dataset
-
-- **Breast Cancer Dataset** from `scikit-learn`
-- Contains numerical features derived from breast mass measurements
-- Binary target variable (malignant / benign)
-
----
-
-## Pipeline Structure
-
-The pipeline is implemented using Dagster assets:
-
-- **raw_data**  
-  Loads and preprocesses the dataset
-
-- **eda_summary**  
-  Generates descriptive statistics for exploratory data analysis
-
-- **train_test**  
-  Splits the dataset into training and testing sets
-
-- **decision_tree**  
-  Trains a Decision Tree classifier
-
-- **random_forest**  
-  Trains a Random Forest classifier
-
-- **logistic_regression**  
-  Trains a Logistic Regression model
-
-- **knn**  
-  Trains a K-Nearest Neighbors classifier
-
-Dagster automatically builds a **Directed Acyclic Graph (DAG)** based on asset dependencies.
+The pipeline performs data ingestion, exploratory data analysis (EDA), train-test splitting, model training, and evaluation while automatically tracking asset lineage and execution history.
 
 ---
 
 ## Key Features
 
-- Asset-based pipeline design
-- Automatic dependency tracking
-- Partial re-execution when data changes
-- Multiple machine learning models
-- Visual pipeline graph and execution history
-- Reproducible and auditable ML workflow
+- Asset-based machine learning workflow orchestration using Dagster
+- Automated dependency tracking between pipeline stages
+- Reproducible execution through asset materialization
+- Selective re-execution of downstream assets when upstream data changes
+- Multiple machine learning models trained within a unified workflow
+- Visual asset lineage and execution monitoring through the Dagster UI
+- Demonstration of core MLOps concepts including orchestration, lineage tracking, and reproducibility
 
 ---
 
-## Demonstration of Partial Re-Execution
+## Pipeline Architecture
 
-After the initial pipeline execution, the data asset was modified by sampling a subset of the dataset.  
-Upon re-materialization, Dagster re-executed **only the dependent assets**, instead of rerunning the entire pipeline.
+The workflow is modeled as a Directed Acyclic Graph (DAG) of Dagster assets.
 
-This demonstrates Dagster’s ability to save computation time and improve reliability.
+```text
+raw_data
+├── eda_summary
+└── train_test
+     ├── decision_tree
+     ├── random_forest
+     ├── logistic_regression
+     └── knn
+```
+
+### Asset Descriptions
+
+| Asset | Purpose |
+|---------|---------|
+| raw_data | Loads and preprocesses the dataset |
+| eda_summary | Generates descriptive statistics for exploratory analysis |
+| train_test | Performs train-test splitting |
+| decision_tree | Trains and evaluates a Decision Tree classifier |
+| random_forest | Trains and evaluates a Random Forest classifier |
+| logistic_regression | Trains and evaluates a Logistic Regression classifier |
+| knn | Trains and evaluates a K-Nearest Neighbors classifier |
 
 ---
 
-## Performance Comparison
+## Dataset
 
-| Approach | Approximate Time |
-|--------|------------------|
-| Rerunning full notebook | ~25–30 seconds |
-| Dagster partial re-run | ~8–10 seconds |
+The project uses the Breast Cancer Wisconsin Dataset from Scikit-Learn.
+
+### Dataset Characteristics
+
+- 569 patient samples
+- 30 numerical diagnostic features
+- Binary classification problem
+- Target Classes:
+  - Malignant
+  - Benign
+
+The dataset is widely used for benchmarking machine learning classification workflows and pipeline orchestration systems.
+
+---
+
+## Model Performance
+
+The workflow trains and evaluates multiple classification models.
+
+| Model | Accuracy |
+|---------|---------|
+| Decision Tree | 94% |
+| Random Forest | 97% |
+| Logistic Regression | 96% |
+| K-Nearest Neighbors (KNN) | 95% |
+
+The Random Forest classifier achieved the highest predictive performance among the evaluated models.
+
+---
+
+# Asset Lineage
+
+The image below illustrates dependency tracking and asset relationships managed by Dagster.
+
+![Asset Lineage](docs/screenshots/asset_lineage_materialized.png)
+
+---
+
+# Asset Catalog
+
+Dagster automatically registers and tracks all pipeline assets through its catalog interface.
+
+![Asset Catalog](docs/screenshots/asset_catalog.png)
+
+---
+
+# Pipeline Execution
+
+Successful materialization of all assets within the workflow.
+
+![Pipeline Execution](docs/screenshots/pipeline_run_success.png)
 
 ---
 
 ## Project Structure
 
-dagster_ml/
-├── init.py
-├── repo.py
-└── assets/
-├── init.py
-└── pipeline.py
+```text
+Dagster-Reproducible-ML-Pipeline
+│
+├── dagster_ml
+│   ├── repo.py
+│   └── assets
+│       └── pipeline.py
+│
+├── docs
+│   └── screenshots
+│       ├── asset_catalog.png
+│       ├── asset_lineage_materialized.png
+│       └── pipeline_run_success.png
+│
+├── dagster_ml_workflow.ipynb
+├── breast_cancer_dataset.csv
+├── README.md
+└── requirements.txt
+```
 
-A033_Meet_Pawar.ipynb
-README.md
+---
 
+## Technologies Used
+
+- Python
+- Dagster
+- Scikit-Learn
+- Pandas
+- Matplotlib
+- Seaborn
+- Jupyter Notebook
 
 ---
 
 ## How to Run
 
-1. Install dependencies:
-pip install dagster dagster-webserver scikit-learn pandas
+### Clone Repository
 
+```bash
+git clone https://github.com/MeetNotFound/Dagster-Reproducible-ML-Pipeline.git
+cd Dagster-Reproducible-ML-Pipeline
+```
 
-2. Start Dagster:
-dagster dev -f dagster_ml/repo.py
+### Install Dependencies
 
+```bash
+pip install -r requirements.txt
+```
 
-3. Open the Dagster UI and materialize assets from the Catalog.
+### Launch Dagster
+
+```bash
+python -m dagster dev -f dagster_ml/repo.py
+```
+
+### Open Dagster UI
+
+```text
+http://localhost:3000
+```
+
+Materialize assets through the Dagster Catalog to execute the workflow.
 
 ---
 
-## Tools & Technologies
+## Learning Outcomes
 
-- Python
-- Dagster
-- Scikit-learn
-- Google Colab
-- Cloudflare Tunnel (for UI access)
+This project demonstrates practical understanding of:
 
----
-
-## Conclusion
-
-This project demonstrates how Dagster enables reproducible machine learning pipelines by tracking data lineage, execution history, and dependencies.  
-It significantly improves reliability and efficiency compared to traditional notebook-based workflows.
+- MLOps Fundamentals
+- Workflow Orchestration
+- Asset-Based Pipeline Design
+- Dependency Tracking
+- Reproducible Machine Learning
+- Data Lineage
+- Model Evaluation
+- Pipeline Monitoring
 
 ---
 
-## Author
+## License
 
-**Meet Pawar**
+This repository is intended for educational, research, and portfolio demonstration purposes.
+
+GitHub: https://github.com/MeetNotFound
+
+LinkedIn: https://www.linkedin.com/in/meet-pawar
